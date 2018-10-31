@@ -1,0 +1,18 @@
+// 
+// BOPC Evaluation
+//
+// Print an arbitrary message to stdout using write()
+//
+void payload() 
+{ 
+    string msg = "This is my random message! :)\0";
+
+    __r0 = 0;
+    __r1 = &msg;
+    __r2 = 1;
+
+
+    write( __r0, __r1, __r2 );
+
+    // return 0x?? ;s
+}

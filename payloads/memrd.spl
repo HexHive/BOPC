@@ -1,0 +1,14 @@
+// 
+// BOPC Evaluation
+//
+// Memory Load
+//
+void payload() 
+{ 
+    int array = {1, 2, 3, 4, 5};
+    
+    __r1 = &array;
+
+    __r0 = *__r1;
+
+}

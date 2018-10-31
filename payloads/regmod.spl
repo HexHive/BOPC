@@ -1,0 +1,11 @@
+// 
+// BOPC Evaluation
+//
+// Register modification
+//
+void payload() 
+{ 
+    __r0 = 0;
+
+    __r0 += 1;
+}

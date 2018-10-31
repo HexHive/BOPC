@@ -1,0 +1,15 @@
+// 
+// BOPC Evaluation
+//
+// Infinity loop with constant assignment
+//
+void payload() 
+{ 
+
+//  __r0 = 1;
+
+LOOP:
+    __r1 = 0;
+
+    goto LOOP;
+}

@@ -1,0 +1,17 @@
+// 
+// BOPC Evaluation
+//
+// Initialize 4 registers with references
+//
+void payload() 
+{ 
+    int    var_a = 0x100;
+    string var_b = "this is a random string";
+    int    var_c = {1, 2, 3, &var_a, 4, &var_b};
+    int    var_d = &var_c;
+
+    __r0 = &var_a;
+    __r1 = &var_b;
+    __r2 = &var_c;
+    __r3 = &var_d;
+}

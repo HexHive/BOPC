@@ -1,0 +1,13 @@
+// 
+// BOPC Evaluation
+//
+// Initialize 5 registers
+//
+void payload() 
+{ 
+    __r0 = 0;
+    __r1 = 1;
+    __r2 = 2;
+    __r3 = 3;
+    __r4 = 4;
+}

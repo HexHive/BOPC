@@ -1,0 +1,15 @@
+// 
+// BOPC Evaluation
+//
+// Memory Store
+//
+void payload() 
+{ 
+    int array = {1, 2, 3, 4, 5};
+    
+    __r0 = &array;
+    __r1 = 0;
+
+    *__r0 = __r1;
+
+}

