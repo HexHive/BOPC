@@ -32,7 +32,7 @@ For more details on how BOPC works, please refer to our [paper](./ccs18_paper.pd
 
 To operate, BOPC requires 3 inputs:
 * A target binary that has an _Arbitrary Memory Write_ (AWP) vulnerability (**hard requirement**)
-* The desired payload, expressed in a high level language called SPL (stands for _SPloit Language)
+* The desired payload, expressed in a high level language called SPL (stands for _SPloit Language_)
 * The so-called "_entry point_", which is the first instruction in the binary that the
 payload execution should start. There can be more than one entry points and determining it is
 part of the vulnerability discovery process.
