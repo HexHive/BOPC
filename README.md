@@ -401,8 +401,49 @@ set {char[30]} (0x678fc0) = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x6
 set {char[8]} (0x66e9e0) = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 ```
 
+Let's take a closer look here. The _Simulated Trace_ comment shows the path that BOPC followed.
+This is a list of `($pc, $src, $dst)` tuples. `$pc` is the program counter of the SPL statement.
+`$src` is the address of the functional block for the current SPL statement and `$dst` is the
+address of the next functional block.
 
-##### Measuring application capabilities
+
+Before it runs, script adjusts `$rip` to point to the entry point, and makes sure that
+stack pointers (`$rsp`, `$rbp`) are valid. It also allocates a "variable pool" (for
+more details please look at [simulate.py](./source/simulate.py)) which in our case is not
+used.
+
+Then we have the two actual memory writes at `0x678fc0` and at `0x66e9e0`. If you load
+the binary in gdb and run this script you will see your payload being executed:
+
+```
+(gdb) break main
+Breakpoint 5 at 0x4041a0
+(gdb) run
+Starting program: /home/ispo/BOPC/evaluation/proftpd 
+
+Breakpoint 1, 0x00000000004041a0 in main ()
+(gdb) continue
+Continuing.
+
+Breakpoint 3, 0x000000000041d0b5 in pr_open_scoreboard ()
+(gdb) continue
+Continuing.
+
+Breakpoint 2, 0x0000000000403740 in write@plt ()
+(gdb) continue
+Continuing.
+This is my random message! :)
+Program received signal SIGSEGV, Segmentation fault.
+0x00007fffffffde60 in ?? ()
+```
+
+Note that BOPC stops after executing the desired payload (hence the crash). If you
+want to avoid this situation you can use the `returnto` SPL statement to naturally
+transfer execution to a safe location.
+
+
+
+#### Measuring application capabilities
 
 **NOTE:** This is a new concept, which is not mentioned in the paper. 
 
