@@ -443,7 +443,7 @@ transfer execution to a safe location.
 
 
 
-#### Measuring application capabilities
+### Measuring application capabilities
 
 **NOTE:** This is a new concept, which is not mentioned in the paper. 
 
