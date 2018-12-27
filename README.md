@@ -10,7 +10,6 @@ ___
 BOPC (stands for _BOP Compiler_) is a tool for automatically synthesizing arbitrary,
 Turing-complete, _Data-Only_ payloads. BOPC finds execution traces in the binary that
 execute the desired payload while adhering to the binary's Control Flow Graph (CFG).
-
 This implies that the existing control flow hijacking defenses are not sufficient to
 detect this style of execution, as execution does never violates the Control Flow
 Integrity (CFI).
@@ -18,11 +17,11 @@ Integrity (CFI).
 Essentially, we can say that Block Oriented Programming is _code reuse under CFI_. 
 
 BOPC works with basic blocks (hence the name "block-oriented"). What it does is to find
-a set _functional_ blocks (i.e., blocks that perform useful computations). This step
-is somewhat similar in finding Return Oriented Programming (ROP) gadgets.
+a set of _functional_ blocks (i.e., blocks that perform useful computations). This step
+is somewhat similar with finding Return Oriented Programming (ROP) gadgets.
 Having the functional blocks, BOPC looks for _dispatcher_ blocks to that are used to
-stitch functional blocks together. Compared to ROP that we can move from one gadget
-to the next without any limitation, here we can't do that as it would violate the CFI.
+stitch functional blocks together. Compared to ROP (that we can move from one gadget
+to the next without any limitation), here we can't do that as it would violate the CFI.
 Instead, BOPC finds a proper sequence for dispatcher blocks that naturally lead the
 execution from one functional block to the next one.
 Unfortunately the problem of building _Data-Only_ payloads is NP-hard. 
