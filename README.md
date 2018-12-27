@@ -126,6 +126,63 @@ Debugging Options:
                         Abstract a specific basic block and exit
 ```
 
+Ok, there are a lot of options here (divided into 4 categories) as BOPC can do several things.
+
+
+Let's start with the **General Arguments**. To avoid working directly with assembly, BOPC,
+"abstracts" each basic block into a set of "actions". For more details, please check
+[absblk.py](./source/absblk.py). Abstraction process symbolically executes each basic block
+in the binary and carefully monitors its actions. The abstraction process can take from several
+minutes (for small binaries) to several hours (for large ones). Waiting that much every time
+that you want to run BOPC is not a good idea, so BOPC uses and old trick: _caching_.
+
+The observation here is that abstraction is unique per-binary and independent from the SPL
+payload. Therefore, we can collect the abstractions once, save them into a file and each time
+loading them. The `load` option loads the abstractions from a file that was previously saved,
+while the `save` option saves abstractions to a file. The `saveonly` option is the same, but
+it halts execution after it saves the abstractions.
+
+
+```
+./source/BOPC.py -dd -b $BINARY -a saveonly
+```
+
+
+The `-b` is the target binary that you want to
+exploit. `--emit-IR` 
+
+BOPC provides 5 verbosity levels: no option, `-d`, `-dd`, `-ddd` and `-dddd`. I recommend you
+to use either the `-dd` or the `-ddd` to get a detailed progress status.
+
+
+-b BINARY, --binary BINARY
+                        Binary file of the target application
+  -a {save,load,saveonly}, --abstractions {save,load,saveonly}
+                        Work with abstraction file
+  --emit-IR             Dump SPL IR to a file and exit
+  -d                    Set debugging level to minimum
+  -dd                   Set debugging level to basic (recommended)
+  -ddd                  Set debugging level to verbose (DEBUG ONLY)
+  -dddd                 Set debugging level to print-everything (DEBUG ONLY)
+  -V, --version         show program's version number and exit
+
+
+The **Application Capability** options used to measure _Application's capabilities_, that
+gives us upper bounds on **what** payloads the target binary is capable of executing.
+
+
+Finally the **Debugging Options** assist the audit/debugging/development process. They are used
+to bypass parts of the BOP work-flow. Do not use them unless you're doing changes in the code.
+Recall that BOPC finds a mapping between virtual and host registers along with a mapping
+between SPL variables and underlying memory addresses. If that mapping does not lead to
+a solution it goes back and tries another one. If you want to focus on a specific mapping
+(e.g., let's say that code crashes at mapping 458), you don't have to wait for BOPC to try
+the first 457 mappings first. By supplying the `--mapping-id=458` option you can skip
+all mappings and focus on that one. In case that you don't know the mapping number but you
+know the actual mapping you can instead you the `--mapping` option: `--mapping=`__r0=rax __r1=rbx`
+
+
+
 ___
 
 
