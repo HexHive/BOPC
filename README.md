@@ -5,7 +5,7 @@
 ___
 
 
-### What is BOPC
+## What is BOPC
 
 BOPC (stands for _BOP Compiler_) is a tool for automatically synthesizing arbitrary,
 Turing-complete, _Data-Only_ payloads. BOPC finds execution traces in the binary that
@@ -52,13 +52,13 @@ so do **not** expect it to work perfectly under all scenarios. It works nicely f
 ___
 
 
-### Installation
+## Installation
 Just run `setup.sh` :)
 
 ___
 
 
-### How to use BOPC
+## How to use BOPC
 
 BOPC started as a hacky project, so several changes made to adapt it into an scientific
 context. That is, the implementation in the [paper](./ccs18_paper.pdf) is slightly
@@ -130,7 +130,7 @@ Debugging Options:
 
 
 
-### Notes (read them carefully!)
+## Notes (please read them carefully!)
 
 * When the symbolic execution engine deals with filesystem (i.e., it has to `open` a file),
 we have to provide it a valid file. Filename is defined in `SYMBOLIC_FILENAME` in 
