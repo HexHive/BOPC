@@ -130,7 +130,7 @@ Debugging Options:
 
 
 
-## Notes (please read them carefully!)
+## Final Notes (please read them carefully!)
 
 * When the symbolic execution engine deals with filesystem (i.e., it has to `open` a file),
 we have to provide it a valid file. Filename is defined in `SYMBOLIC_FILENAME` in 
