@@ -49,10 +49,13 @@ the original execution.
 so do **not** expect it to work perfectly under all scenarios. It works nicely for the
  provided test cases, but beyond that we cannot guarantee that will work as expected.
 
+___
 
 
 ### Installation
 Just run `setup.sh` :)
+
+___
 
 
 ### How to use BOPC
@@ -61,7 +64,6 @@ BOPC started as a hacky project, so several changes made to adapt it into an sci
 context. That is, the implementation in the [paper](./ccs18_paper.pdf) is slightly
 different from the actual implementation, as we omitted several implementation details
 from the paper.
-
 The actual implementation overview is shown below:
 ![alt text](./source/images/BOPC_overview.png)
 
