@@ -435,16 +435,14 @@ if __name__ == '__main__':
         IR.compile()                                # compile the SPL payload
 
         IR = O.optimize(IR.get_ir())
-        IR.optimize(mode=args.optimizer)           # optimize IR (if needed)
+        IR.optimize(mode=args.optimizer)            # optimize IR (if needed)
 
 
-        # IR is useless; we're measuring capability
         project, CFG = load(args.binary)
         mark         = M.mark(project, CFG, IR, 'puts')
 
         if abstract(mark, args.abstractions, args.binary) > -1:
-
-            entry = int(args.entry, 0)
+            entry = int(args.entry, 0)              # get entry point
 
             X = mark.mark_candidate(sorted(map(lambda s : tuple(s.split('=')), args.mapping)))
 
