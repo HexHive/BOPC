@@ -63,12 +63,15 @@ ___
 BOPC started as a hacky project, so several changes made to adapt it into an scientific
 context. That is, the implementation in the [paper](./ccs18_paper.pdf) is slightly
 different from the actual implementation, as we omitted several implementation details
-from the paper.
-The actual implementation overview is shown below:
+from the paper. The actual implementation overview is shown below:
 ![alt text](./source/images/BOPC_overview.png)
 
 
-First, let's start with the command line options:
+
+### Command line arguments explained
+
+A good place to start are the command line arguments:
+
 ```
 usage: BOPC.py [-h] [-b BINARY] [-a {save,load,saveonly}] [--emit-IR] [-d]
                [-dd] [-ddd] [-dddd] [-V] [-s SOURCE] [-e ENTRY]
@@ -128,43 +131,88 @@ Debugging Options:
 
 Ok, there are a lot of options here (divided into 4 categories) as BOPC can do several things.
 
-
 Let's start with the **General Arguments**. To avoid working directly with assembly, BOPC,
 "abstracts" each basic block into a set of "actions". For more details, please check
 [absblk.py](./source/absblk.py). Abstraction process symbolically executes each basic block
-in the binary and carefully monitors its actions. The abstraction process can take from several
-minutes (for small binaries) to several hours (for large ones). Waiting that much every time
-that you want to run BOPC is not a good idea, so BOPC uses and old trick: _caching_.
+in the binary and carefully monitors its actions. The abstraction process can take from a few
+minutes (for small binaries) to several hours (for the larger ones). Waiting that much every
+time that you want to run BOPC does not sound a good idea, so BOPC uses an old trick: _caching_.
 
-The observation here is that abstraction is unique per-binary and independent from the SPL
-payload. Therefore, we can collect the abstractions once, save them into a file and each time
-loading them. The `load` option loads the abstractions from a file that was previously saved,
-while the `save` option saves abstractions to a file. The `saveonly` option is the same, but
-it halts execution after it saves the abstractions.
+The abstraction process depends on the binary and not on the SPL payload nor the entry point,
+so we only need to calculate them *once* per binary. Therefore, we have to calculate the
+abstractions only one time, then save them into a file and each time loading them. 
+The `save` and `saveonly` options save the abstractions into a file. The only difference is that
+`saveonly` halts execution after it saves the abstractions, while `save` continues to search
+for a solution. As you can guess, the `load` option loads the abstractions from a file.
 
-
-```
-./source/BOPC.py -dd -b $BINARY -a saveonly
-```
-
-
-The `-b` is the target binary that you want to
-exploit. `--emit-IR` 
+The `--emit-IR` option is used to "dump" the IR representation of the SPL payload (this is
+another intermediate result that you should not worry about it).
 
 BOPC provides 5 verbosity levels: no option, `-d`, `-dd`, `-ddd` and `-dddd`. I recommend you
 to use either the `-dd` or the `-ddd` to get a detailed progress status.
 
+Let's get into the **Search Options** options. The most important arguments here are the
+`--source` (which is a file that contains the SPL payload) and the `--entry` which is an
+address inside the binary that indicates the entry point. Trace searching starts from the
+entry point, so this is quite important.
 
--b BINARY, --binary BINARY
-                        Binary file of the target application
-  -a {save,load,saveonly}, --abstractions {save,load,saveonly}
-                        Work with abstraction file
-  --emit-IR             Dump SPL IR to a file and exit
-  -d                    Set debugging level to minimum
-  -dd                   Set debugging level to basic (recommended)
-  -ddd                  Set debugging level to verbose (DEBUG ONLY)
-  -dddd                 Set debugging level to print-everything (DEBUG ONLY)
-  -V, --version         show program's version number and exit
+
+The optimizer (`-O` option) is double edge knife. On the one hand, it optimizes the SPL
+payload to make it more flexible. This means that it increases the likelihood to find a
+solution. On the other hand, the search space (along with the execution time) is increased.
+The decision is up to the user, hence the use of optimizer is optional. The 2 possible
+optimizations are the _out of order execution_ (`ooo` option) and the _statement rewriting_
+(`rewrite` option). 
+
+
+The out-of-order optimization reorders payload statements.
+Consider for example the following SPL payload:
+```
+	__r0 = 13;
+	__r1 = 37;
+```
+
+To find a solution here, BOPC must find a functional block for the first statement (`__r0 = 13`)
+then a functional block for the second statement (`__r1 = 37`) and a set of dispatcher blocks
+to connect these two statements. However these functional blocks may be far apart so a dispatcher
+may not exist. However there's no difference if you execute the `__r0 = 13` statement first
+or second as it does not have any dependencies with the other statement. Thus if we rewrite
+the payload as follows:
+```
+	__r1 = 37;
+	__r0 = 13;
+```
+
+It may be possible to find another set dispatcher blocks, hopefully much smaller 
+(path `A -> B` may be much longer than path `B -> A`) and find a solution.
+
+Internally, this is a **two-step** process. First the optimizer **groups** independent
+statements together (for more details take a look [here](./source/optimize.py)) and
+generated and augmented SPL IR. Then, the trace search module, permutes statements
+within each group, each time resulting in a different SPL payload. However all these
+payloads are equivalent. As you can guess there are can be an exponential number of 
+permutations, so this can take forever. To alleviate that, you can adjust
+`N_OUT_OF_ORDER_ATTEMPTS` configuration parameter and tell BOPC to stop after trying 
+**N** iterations, instead of trying all of them.
+
+
+
+The statement rewriting is an under development optimization that rewrites
+some statements that do not exist in the binary. For instance if the SPL payload
+spawns a shell through 'execve()' but the target binary does not invoke
+`execve()` at all, then BOPC fails as there are no functional blocks for that statement.
+However, if the target binary invokes `execv()`, it may be possible to find a solution
+by replacing `execve()` with `execv()`. The optimizer contains a list of possible replacements,
+and adjust payload accordingly.
+
+
+As we already explained, the output of BOPC is a set of "what-where" memory writes. There
+are several ways to express the output. For instance they can be raw lines containing the
+address, the value and the size of the data that should be written in memory. Or they can
+be a gdb/IDA script that can run directly on the debugger and modify the memory accordingly.
+The last option is the best one as it you only need to run the BOPC output into the debugger.
+Currently only the `gdb` format is implemented.
+
 
 
 The **Application Capability** options used to measure _Application's capabilities_, that
@@ -180,6 +228,22 @@ a solution it goes back and tries another one. If you want to focus on a specifi
 the first 457 mappings first. By supplying the `--mapping-id=458` option you can skip
 all mappings and focus on that one. In case that you don't know the mapping number but you
 know the actual mapping you can instead you the `--mapping` option: `--mapping=`__r0=rax __r1=rbx`
+
+
+
+Finally, BOPC has a lot of configuration options. You see all of them in 
+[config.py](./source/config.py) and adjust them according to our needs. The default
+values are a nice trade off between accuracy and performance that I found during
+then evaluation.
+
+
+### An end to end example
+
+
+```
+./source/BOPC.py -dd -b $BINARY -a saveonly
+```
+
 
 
 
