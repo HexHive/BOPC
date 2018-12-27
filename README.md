@@ -237,7 +237,7 @@ values are a nice trade off between accuracy and performance that I found during
 then evaluation.
 
 
-### Example
+## Example
 
 Let's see now how to actually use BOPC. The first thing to do is to get the basic block
 abstractions. This step is optional, but I expect that you are going to run BOPC several times,
