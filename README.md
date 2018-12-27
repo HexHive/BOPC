@@ -414,14 +414,12 @@ be executed in the target binary.
 To get the all application capabilities run the following code:
 ```
 ./source/BOPC.py -dd --binary $BINARY --abstractions load --capability all save
-
 ```
 
 If you want to simply dump all functional gadgets for a specific statement, you can do
 it as follows:
 ```
 ./source/BOPC.py -dd --binary $BINARY --abstractions load --capability $STMT noedge
-
 ```
 
 Where `$STMT` can be one ore more from `{all, regset, regmod, memrd, memwr, call, cond}`.
