@@ -1650,7 +1650,7 @@ class simulate:
         for reg, val in self.unchecked_regsets:
             if isinstance(val, tuple):
                 pass
-                wanr('Oups!')
+                warn('Oups!')
 
             else:
                 if state.se.eval( self.__getreg(reg, state) ) != val:
