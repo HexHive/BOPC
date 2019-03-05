@@ -7,6 +7,11 @@ ___
 
 ## What is BOPC
 
+**NEW:** The talk from CCS'18 presentation is available
+[here](https://www.youtube.com/watch?v=iK7jhrK5uyg).
+
+
+
 BOPC (stands for _BOP Compiler_) is a tool for automatically synthesizing arbitrary,
 Turing-complete, _Data-Only_ payloads. BOPC finds execution traces in the binary that
 execute the desired payload while adhering to the binary's Control Flow Graph (CFG).
@@ -27,7 +32,10 @@ execution from one functional block to the next one.
 Unfortunately the problem of building _Data-Only_ payloads is NP-hard. 
 However it turns out that in practice BOPC finds solution in a reasonable amount
 of time.
-For more details on how BOPC works, please refer to our [paper](./ccs18_paper.pdf).
+
+
+For more details on how BOPC works, please refer to our [paper](./ccs18_paper.pdf),
+and our [slides](./ccs18_slides.pdf) from CCS'18.
 
 
 To operate, BOPC requires 3 inputs:
