@@ -260,6 +260,21 @@ def dbg_arb( lvl, msg, arb, pre='[+] ' ):
 
 
 # -------------------------------------------------------------------------------------------------
+# func_name(): Convert an address to the name of its function, or
+# "__unknown" if it cannot be found.
+#
+# :Arg addr: The address to lookup
+# :Ret: Returns a string with the name of the function containing the address, or "__unknown".
+#
+def func_name ( addr ):
+    if addr in ADDR2FUNC:
+        return ADDR2FUNC[addr].name
+    else:
+        return "__unknown"
+
+
+
+# -------------------------------------------------------------------------------------------------
 # fatal(): This function is invoked when a fatal error occurs. It prints the error and terminates
 #       the program.
 #
