@@ -69,9 +69,11 @@ apt-get install --yes pkg-config python-tk
 # install pip packages
 pip install angr==7.8.9.26
 pip install claripy==7.8.9.26
-pip install networkx==1.11
 pip install matplotlib
 pip install simuvex
+# networkx must be installed after simuvex and angr, since they depend
+# on networkx 2.1
+pip install networkx==1.11
 pip install graphviz==0.8.1
 pip install pygraphviz==1.3.1
 
