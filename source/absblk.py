@@ -1030,6 +1030,7 @@ class abstract_ng( object ):
         else:
             simgr.step()                            # execute 1 basic block
     
+        signal.alarm(0)                             # disable alarm
 
 
         if simgr.active:                            # check if execution was successful
@@ -1057,8 +1058,6 @@ class abstract_ng( object ):
         self.__mem_w(newst)                         # analyze memory writes
         self.__call(newst)                          # analyze function/system calls
         self.__cond(newst)                          # analyze conditional jumps
-
-        signal.alarm(0)                             # disable alarm
 
 
         # -------------------------------------------------------------------------

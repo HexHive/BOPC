@@ -743,9 +743,8 @@ class _cfg_shortest_path( _cs_ksp_intrl ):
         retn_s   = [ ]                              # return node set
 
 
-
         dbg_prnt(DBG_LVL_4, 'Starting recursive Dijkstra at: 0x%x (%s). Pre-call Stack: %s' % 
-                        (root.addr, ADDR2FUNC[root.addr].name, pretty_list(precall_stack, ', ')))
+                 (root.addr, func_name (root.addr), pretty_list(precall_stack, ', ')))
 
 
         # if root is clobbering skip it (function is recursive, root may not be the top node)
@@ -956,7 +955,7 @@ class _cfg_shortest_path( _cs_ksp_intrl ):
                             continue
 
                     # Although we handle this case pretty well, we still highlight it
-                    if ADDR2FUNC[u.addr] != ADDR2FUNC[v.addr]:
+                    if u.addr in ADDR2FUNC and v.addr in ADDR2FUNC and ADDR2FUNC[u.addr] != ADDR2FUNC[v.addr]:
                         warn("Node 0x%x (%s) transfers control to '%s'" %
                                 (u.addr, u.name, ADDR2FUNC[v.addr].name), DBG_LVL_4)
                         
