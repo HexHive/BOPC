@@ -1635,7 +1635,7 @@ class simulate:
     #   <Bool (Reverse(symbolic_read_unconstrained_277383_64) + (r13_277379_64 << 0x3)) == x_472_64>
     #
     # This means that our reservation will be wrong and the register will never be assigned to the
-    # right vaalue. A quick patch here, is to check whether register gets concretized to the right
+    # right value. A quick patch here, is to check whether register gets concretized to the right
     # value after the block execution and if not we add the desired constraint
     #
     # <Bool (0#32 .. (mem_d8003100_481_64[31:0] & 0xf8000000)) != 0x30000000>]

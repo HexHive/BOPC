@@ -36,6 +36,7 @@ import capability as P
 import argparse
 import textwrap
 import ntpath
+import angr
 import os
 import sys
 
@@ -277,6 +278,7 @@ def parse_args():
 def load( filename ):
     # load the binary (exception is thrown if name is invalid)
     project = angr.Project(filename, load_options={'auto_load_libs': False})
+
 
 
     # generate CFG

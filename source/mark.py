@@ -53,7 +53,7 @@ import networkx as nx
 
 import struct
 import copy
-import pickle
+import cPickle as pickle
 import pprint
 import math
 import re
@@ -461,7 +461,7 @@ class mark( object ):
             
 
         # now iterate over nodes and place abstractions to the file
-        for node, attr in self.__cfg.graph.nodes_iter(data=True):
+        for node, attr in self.__cfg.graph.nodes(data=True):
             if node.addr in abstr:
                 # dbg_arb(DBG_LVL_3, "Abstractions for block 0x%x:" % node.addr, abstr[node.addr])
                 self.__cfg.graph.add_node(ADDR2NODE[node.addr], abstr=abstr[node.addr])

@@ -34,7 +34,7 @@ import path as P
 import networkx as nx
 import textwrap
 import datetime
-import pickle
+import cPickle as pickle
 import math
 import numpy
 
